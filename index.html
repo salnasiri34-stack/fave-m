@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Saudi Life RP - النسخة العالمية الشاملة</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');
+        body { font-family: 'Cairo', sans-serif; background-color: #05070a; color: #f8fafc; overflow-x: hidden; }
+        .glass-panel { background: rgba(13, 18, 30, 0.92); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.08); }
+        
+        /* تأثيرات الإضاءة والسفتي الواقعية */
+        @keyframes policeFlashRed { 0%, 100% { opacity: 0.1; } 50% { opacity: 1; text-shadow: 0 0 25px #ef4444; } }
+        @keyframes policeFlashBlue { 0%, 100% { opacity: 1; text-shadow: 0 0 25px #3b82f6; } 50% { opacity: 0.1; } }
+        @keyframes hiddenFlash { 0%, 100% { opacity: 0.3; background-color: rgba(239, 68, 68, 0.2); } 50% { opacity: 1; background-color: rgba(59, 130, 246, 0.4); box-shadow: 0 0 15px #3b82f6; } }
+        
+        .sfti-red-blue { animation: policeFlashRed 0.35s infinite alternate; }
+        .sfti-hidden-mode { animation: hiddenFlash 0.25s infinite alternate; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col select-none">
+
+    <!-- شريط الحالة العلوي الفخم -->
+    <header class="glass-panel p-3 px-6 flex justify-between items-center shadow-2xl border-b border-slate-800/80 sticky top-0 z-50">
+        <div class="flex items-center space-x-4 space-x-reverse">
+            <span class="text-xl font-black text-amber-400 tracking-wide">🇸🇦 السعودية RP (النسخة الملكية)</span>
+            <span id="playerRoleBadge" class="bg-blue-600/20 text-blue-400 px-3 py-1 rounded-full text-xs font-bold border border-blue-500/30">مواطن / رجل أمن</span>
+        </div>
+        <div class="flex items-center space-x-3 space-x-reverse text-sm font-semibold">
+            <div class="bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-800">💰 الرصيد: <span id="playerMoney" class="text-emerald-400 font-bold">15,000</span> $</div>
+            <button onclick="openPhone()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3 py-1.5 rounded-xl text-xs transition shadow-lg flex items-center gap-1">📱 جوال الاتصال</button>
+            <button onclick="openShowroom()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-3 py-1.5 rounded-xl text-xs transition shadow-lg flex items-center gap-1">🏢 معرض السيارات</button>
+            <button onclick="openAdminPanel()" class="bg-amber-600 hover:bg-amber-500 text-slate-950 font-black px-2.5 py-1.5 rounded-xl text-xs transition">🛠️ أدمن</button>
+        </div>
+    </header>
+
+    <!-- المحتوى الرئيسي للعبة -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 grid grid-cols-1 md:grid-cols-3 gap-6 my-2">
+        
+        <!-- قسم الخريطة والبيئة المزروعة بالشوارع -->
+        <section class="glass-panel rounded-2xl p-5 md:col-span-2 flex flex-col justify-between shadow-2xl relative overflow-hidden">
+            <div>
+                <div class="flex justify-between items-center mb-3">
+                    <h2 class="text-lg font-bold text-slate-100 flex items-center gap-2">🌴 خريطة شوارع المدينة الحية</h2>
+                    <div class="flex items-center gap-2">
+                        <span id="sftiStatusIndicator" class="text-xs px-2.5 py-1 rounded-lg border font-bold bg-slate-900 text-slate-400 border-slate-700">السفتي: مطفأ ⚪</span>
+                        <span class="text-xs text-amber-400 bg-amber-950/40 px-3 py-1 rounded-lg border border-amber-800/40">الممشى: <span id="distanceWalked">0</span> م</span>
+                    </div>
+                </div>
+                
+                <!-- خريطة الشوارع مع التشجير والأرصفة الواقعية -->
+                <div id="gameMap" class="w-full h-85 bg-slate-950 rounded-xl relative border border-slate-800/80 overflow-hidden flex items-center justify-center shadow-inner">
+                    <!-- أشجار ونخيل على الأطراف العلوية والسفلية -->
+                    <div class="absolute top-2 left-2 right-2 flex justify-around text-emerald-500 text-xs opacity-70 pointer-events-none select-none"><span>🌴 🌲 🌴 🌲 🌴 🌲 🌴 🌲 🌴 🌲 🌴 🌲 🌴</span></div>
+                    <div class="absolute bottom-2 left-2 right-2 flex justify-around text-emerald-500 text-xs opacity-70 pointer-events-none select-none"><span>🌴 🌲 🌴 🌲 🌴 🌲 🌴 🌲 🌴 🌲 🌴 🌲 🌴</span></div>
+                    
+                    <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#38bdf8_1px,transparent_1px)] [background-size:24px_24px]"></div>
+                    <div class="absolute w-full h-20 bg-slate-900/90 top-1/2 -translate-y-1/2 flex items-center justify-around text-xs text-slate-400 border-y border-slate-700/60">
+                        <span class="text-amber-400 font-bold tracking-wider">طريق الملك فهد السريع 🛣️</span>
+                    </div>
+                    <div class="absolute h-full w-20 bg-slate-900/90 left-1/2 -translate-x-1/2 border-x border-slate-700/60 flex flex-col justify-around items-center text-slate-600 text-xs">
+                        <span>|</span><span>|</span><span>|</span><span>|</span>
+                    </div>
+
+                    <!-- ايقونة اللاعب والمركبة -->
+                    <div id="playerAvatarMap" class="absolute transition-all duration-200 text-4xl select-none z-20 flex items-center justify-center" style="top: 50%; left: 50%; transform: translate(-50%, -50%);">
+                        <span>🚶‍♂️</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- أزرار التحكم بالاتجاهات والسفتي -->
+            <div class="mt-4 grid grid-cols-5 gap-2">
+                <button onclick="movePlayer('up')" class="bg-slate-800 hover:bg-slate-700 p-3 rounded-xl font-bold transition text-amber-300">⬆️</button>
+                <button onclick="movePlayer('down')" class="bg-slate-800 hover:bg-slate-700 p-3 rounded-xl font-bold transition text-amber-300">⬇️</button>
+                <button onclick="movePlayer('left')" class="bg-slate-800 hover:bg-slate-700 p-3 rounded-xl font-bold transition text-amber-300">⬅️</button>
+                <button onclick="movePlayer('right')" class="bg-slate-800 hover:bg-slate-700 p-3 rounded-xl font-bold transition text-amber-300">➡️</button>
+                <button onclick="toggleVehicleSfti()" class="bg-red-950 hover:bg-red-900 border border-red-600/50 p-3 rounded-xl font-bold transition text-red-300 text-xs flex flex-col items-center justify-center">
+                    <span>🚨</span><span>السفتي</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- قسم كراج السيارات والتحكم السريع -->
+        <section class="glass-panel rounded-2xl p-5 shadow-2xl flex flex-col justify-between">
+            <div>
+                <h2 class="text-lg font-bold text-slate-100 mb-3 flex items-center gap-2">🚙 المرآب والتحكم الميداني</h2>
+                
+                <div class="space-y-2.5 mb-4">
+                    <button onclick="spawnVehicle('دورية شيفروليه تاهو 🇸🇦 أمن الطرق', '🚙', 'normal')" class="w-full bg-slate-900 hover:bg-slate-800 border border-slate-700 p-3 rounded-xl text-right text-xs font-semibold transition flex justify-between items-center text-slate-200">
+                        <span>🚙 تاهو أمن الطرق (سفتي علوي)</span>
+                        <span class="text-blue-400">شرطة</span>
+                    </button>
+                    <button onclick="spawnVehicle('كامري مرور سري 🕶️ (سفتي داخلي مخفي)', '🚗', 'hidden')" class="w-full bg-slate-900 hover:bg-slate-800 border border-slate-700 p-3 rounded-xl text-right text-xs font-semibold transition flex justify-between items-center text-slate-200">
+                        <span>🚗 كامري مرور سري (سفتي مخفي)</span>
+                        <span class="text-amber-400">سري</span>
+                    </button>
+                    <button onclick="spawnVehicle('دودج تشارجر ⚡ مكافحة الإجرام', '🚓', 'normal')" class="w-full bg-slate-900 hover:bg-slate-800 border border-slate-700 p-3 rounded-xl text-right text-xs font-semibold transition flex justify-between items-center text-slate-200">
+                        <span>🚓 دودج تشارجر مكافحة</span>
+                        <span class="text-blue-400">شرطة</span>
+                    </button>
+                    <button onclick="spawnVehicle('ترجل على الأقدام 🚶‍♂️', '🚶‍♂️', 'none')" class="w-full bg-slate-900/50 hover:bg-slate-800 border border-slate-800 p-3 rounded-xl text-right text-xs font-semibold transition flex justify-between items-center text-slate-400">
+                        <span>🚶‍♂️ ترجل ونزل من المركبة</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-slate-950/80 p-3.5 rounded-xl border border-slate-800 text-xs">
+                <span class="font-bold text-amber-400 block mb-1">📢 سجل العمليات الميدانية:</span>
+                <p id="eventLog" class="text-slate-300">تم تفعيل النظام الواقعي الشامل بنجاح.. جاهز للانطلاق.</p>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- نافذة معرض السيارات (Showroom) -->
+    <div id="showroomModal" class="fixed inset-0 bg-black/80 backdrop-blur-md hidden z-50 flex items-center justify-center p-4">
+        <div class="glass-panel max-w-xl w-full p-6 rounded-2xl border border-blue-500/30 shadow-2xl">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-blue-400">🏢 معرض وكالة السيارات الواقعية</h3>
+                <button onclick="closeShowroom()" class="text-slate-400 hover:text-white font-bold text-lg">✕</button>
+            </div>
+            <p class="text-xs text-slate-400 mb-4">اختر سيارتك المفضلة واستخرجها فوراً إلى الشارع:</p>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 flex flex-col justify-between">
+                    <div>
+                        <span class="text-3xl">🚙</span>
+                        <h4 class="font-bold text-sm text-slate-200 mt-2">شيفروليه تاهو أمن الطرق</h4>
+                        <p class="text-xs text-emerald-400 mt-1">السعر: 15,000 $</p>
+                    </div>
+                    <button onclick="buyCar('تاهو أمن الطرق', 15000, '🚙', 'normal')" class="mt-4 bg-blue-600 hover:bg-blue-500 text-white py-2 rounded-lg text-xs font-bold transition">شراء واستخراج</button>
+                </div>
+                <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 flex flex-col justify-between">
+                    <div>
+                        <span class="text-3xl">🚗</span>
+                        <h4 class="font-bold text-sm text-slate-200 mt-2">تويوتا كامري المرور السري</h4>
+                        <p class="text-xs text-emerald-400 mt-1">السعر: 8,500 $</p>
+                    </div>
+                    <button onclick="buyCar('كامري مرور سري', 8500, '🚗', 'hidden')" class="mt-4 bg-blue-600 hover:bg-blue-500 text-white py-2 rounded-lg text-xs font-bold transition">شراء واستخراج</button>
+                </div>
+            </div>
+            <button onclick="closeShowroom()" class="w-full bg-slate-800 hover:bg-slate-700 p-3 rounded-xl text-xs font-bold text-slate-300">إغلاق المعرض</button>
+        </div>
+    </div>
+
+    <!-- نافذة جوال الاتصالات بالأرقام الواقعية -->
+    <div id="phoneModal" class="fixed inset-0 bg-black/80 backdrop-blur-md hidden z-50 flex items-center justify-center p-4">
+        <div class="glass-panel max-w-xs w-full p-5 rounded-3xl border border-emerald-500/30 shadow-2xl flex flex-col items-center">
+            <div class="w-full flex justify-between items-center mb-3">
+                <span class="text-xs text-slate-400 font-bold">جوال الاتصالات والطوارئ 📱</span>
+                <button onclick="closePhone()" class="text-slate-400 hover:text-white font-bold text-sm">✕</button>
+            </div>
+            
+            <!-- شاشة الاتصال والأرقام -->
+            <div id="phoneScreen" class="w-full bg-slate-950 p-3 rounded-2xl border border-slate-800 text-center mb-4 text-emerald-400 font-mono text-xl tracking-widest min-h-[55px] flex items-center justify-center">
+                أدخل الرقم...
+            </div>
+
+            <!-- أزرار الأرقام -->
+            <div class="grid grid-cols-3 gap-2 w-full mb-3 text-sm font-bold">
+                <button onclick="pressPhoneNum('1')" class="bg-slate-900 hover:bg-slate-800 p-3 rounded-xl text-slate-200">1</button>
+                <button onclick="pressPhoneNum('2')" class="bg-slate-900 hover:bg-slate-800 p-3 rounded-xl text-slate-200">2</button>
+                <button onclick="pressPhoneNum('3')" class="bg-slate-900 hover:bg-slate-800 p-3 rounded-xl text-slate-200">3</button>
+                <button onclick="pressPhoneNum('4')" class="bg-slate-900 hover:bg-slate-800 p-3 rounded-xl text-slate-200">4</button>
+                <button onclick="pressPhoneNum('5')" class="bg-slate-900 hover:bg-slate-800 p-3 rounded-xl text-slate-200">5</button>
+                <button onclick="pressPhoneNum('6')" class="bg-slate-900 hover:bg-slate-800 p-3 rounded-xl text-slate-200">6</button>
+                <button onclick="pressPhoneNum('7')" class="bg-slate-900 hover:bg-slate-800 p-3 rounded-xl text-slate-200">7</button>
+                <button onclick="pressPhoneNum('8')" class="bg-slate-900 hover:bg-slate-800 p-3 rounded-xl text-slate-200">8</button>
+                <button onclick="pressPhoneNum('9')" class="bg-slate-900 hover:bg-slate-800 p-3 rounded-xl text-slate-200">9</button>
+                <button onclick="clearPhoneNum()" class="bg-red-950/60 hover:bg-red-900 text-red-300 p-3 rounded-xl text-xs flex items-center justify-center">حذف</button>
+                <button onclick="pressPhoneNum('0')" class="bg-slate-900 hover:bg-slate-800 p-3 rounded-xl text-slate-200">0</button>
+                <button onclick="makePhoneCall()" class="bg-emerald-600 hover:bg-emerald-500 text-white p-3 rounded-xl text-xs flex items-center justify-center">اتصال</button>
+            </div>
+            
+            <p class="text-[10px] text-slate-500 text-center">اتصل بـ 999 للطوارئ أو 110 للمرور السري</p>
+        </div>
+    </div>
+
+    <!-- نافذة الأدمن السرية -->
+    <div id="adminModal" class="fixed inset-0 bg-black/80 backdrop-blur-md hidden z-50 flex items-center justify-center p-4">
+        <div class="glass-panel max-w-md w-full p-6 rounded-2xl border border-amber-500/30 shadow-2xl">
+            <h3 class="text-xl font-bold text-amber-400 mb-2">🛠️ لوحة الأدمن السرية</h3>
+            <p class="text-xs text-slate-400 mb-4">أدخل الرمز المعتمد (13121312) لفتح الصلاحيات:</p>
+            <input type="password" id="adminPassInput" placeholder="أدخل الرمز السري..." class="w-full bg-slate-900 border border-slate-700 p-3 rounded-xl text-white mb-4 focus:outline-none focus:border-amber-500 text-sm">
+            <button onclick="grantAdminMoney()" class="w-full bg-amber-600 hover:bg-amber-500 text-slate-950 font-black p-3 rounded-xl transition mb-2 text-sm">💵 إضافة 50,000$ لحسابي فوراً</button>
+            <button onclick="closeAdminPanel()" class="w-full bg-slate-800 hover:bg-slate-700 p-2.5 rounded-xl text-xs font-bold text-slate-300">إغلاق</button>
+        </div>
+    </div>
+
+    <footer class="text-center py-3 text-xs text-slate-500">
+        صُمم هذا النظام الواقعي الشامل بكل إتقان بواسطة سلومي &copy; 2026
+    </footer>
+
+    <!-- سكربت التحكم ومنطق اللعبة -->
+    <script>
+        let player = {
+            money: 15000,
+            posX: 50,
+            posY: 50,
+            distance: 0,
+            vehicleName: "مواطن",
+            sftiActive: false,
+            sftiType: "none", // normal أو hidden
+            currentDial: ""
+        };
+
+        let avatarMap = document.getElementById("playerAvatarMap");
+        let eventLog = document.getElementById("eventLog");
+
+        function updateUI() {
+            document.getElementById("playerMoney").innerText = player.money.toLocaleString();
+            document.getElementById("distanceWalked").innerText = player.distance;
+        }
+
+        // حركة اللاعب في الشوارع
+        window.movePlayer = function(dir) {
+            if (dir === 'up' && player.posY > 12) player.posY -= 6;
+            if (dir === 'down' && player.posY < 88) player.posY += 6;
+            if (dir === 'left' && player.posX > 10) player.posX -= 6;
+            if (dir === 'right' && player.posX < 90) player.posX += 6;
+
+            avatarMap.style.top = player.posY + "%";
+            avatarMap.style.left = player.posX + "%";
+
+            player.distance += 10;
+            player.money += 25;
+            updateUI();
+        }
+
+        // نظام السفتي الواقعي والسري المخفي
+        window.toggleVehicleSfti = function() {
+            if (player.sftiType === 'none') {
+                logEvent("⚠️ أنت ترجل على الأقدام، يرجى ركوب مركبة أمنية أو سرية لتشغيل السفتي!");
+                return;
+            }
+
+            player.sftiActive = !player.sftiActive;
+            let indicator = document.getElementById("sftiStatusIndicator");
+
+            if (player.sftiActive) {
+                if (player.sftiType === 'hidden') {
+                    indicator.innerText = "سفتي سري داخلي مخفي 🔵🔴";
+                    indicator.className = "text-xs px-2.5 py-1 rounded-lg border font-bold sfti-hidden-mode text-amber-300 border-amber-500";
+                    logEvent("🕶️ تم تفعيل السفتي المخفي داخل الشبكة الأمامية للسيارة السرية بنجاح!");
+                } else {
+                    indicator.innerText = "السفتي العلوي شغال 🚨";
+                    indicator.className = "text-xs px-2.5 py-1 rounded-lg border font-bold sfti-red-blue bg-red-950 text-red-300 border-red-500";
+                    logEvent("🚨 تم تشغيل سفتي الدورية العلوية بكامل وميضها الواقعي!");
+                }
+            } else {
+                indicator.innerText = "السفتي: مطفأ ⚪";
+                indicator.className = "text-xs px-2.5 py-1 rounded-lg border font-bold bg-slate-900 text-slate-400 border-slate-700";
+                logEvent("⚪ تم إطفاء سفتي المركبة.");
+            }
+        }
+
+        // استخراج وتغيير المركبات
+        window.spawnVehicle = function(name, emoji, type) {
+            player.vehicleName = name;
+            player.sftiType = type;
+            player.sftiActive = false;
+            avatarMap.innerHTML = `<span>${emoji}</span>`;
+            document.getElementById("sftiStatusIndicator").innerText = "السفتي: مطفأ ⚪";
+            document.getElementById("sftiStatusIndicator").className = "text-xs px-2.5 py-1 rounded-lg border font-bold bg-slate-900 text-slate-400 border-slate-700";
+            logEvent(`🚗 ركبت المركبة بنجاح: ${name}`);
+        }
+
+        // معرض السيارات
+        window.openShowroom = function() { document.getElementById("showroomModal").classList.remove("hidden"); }
+        window.closeShowroom = function() { document.getElementById("showroomModal").classList.add("hidden"); }
+
+        window.buyCar = function(name, price, emoji, type) {
+            if (player.money >= price) {
+                player.money -= price;
+                updateUI();
+                spawnVehicle(name, emoji, type);
+                closeShowroom();
+                logEvent(`🎉 مبروك! تم شراء واستخراج السيارة الجديدة: ${name}`);
+            } else {
+                alert("رصيدك غير كافي لشراء هذه السيارة! تجول في شوارع المدينة لجمع الأرباح.");
+            }
+        }
+
+        // نظام الجوال والاتصالات بالأرقام
+        window.openPhone = function() { document.getElementById("phoneModal").classList.remove("hidden"); }
+        window.closePhone = function() { document.getElementById("phoneModal").classList.add("hidden"); }
+
+        window.pressPhoneNum = function(num) {
+            if (player.currentDial.length < 10) {
+                player.currentDial += num;
+                document.getElementById("phoneScreen").innerText = player.currentDial;
+            }
+        }
+
+        window.clearPhoneNum = function() {
+            player.currentDial = "";
+            document.getElementById("phoneScreen").innerText = "أدخل الرقم...";
+        }
+
+        window.makePhoneCall = function() {
+            let dial = player.currentDial;
+            closePhone();
+            if (dial === "999") {
+                logEvent("📞 [اتصال طوارئ]: تم التواصل مع عمليات الأمن العام بنجاح.");
+                alert("عمليات الأمن العام: مرحباً بك يا سيف الوطن، البلاغ قيد الإجراء الميداني.");
+            } else if (dial === "110") {
+                logEvent("📞 [اتصال مرور سري]: تم التواصل مع فرقة البحث والتحري السرية.");
+                alert("فرقة المرور السري: تم استلام البلاغ، حافظ على السرية بالخط.");
+            } else {
+                logEvent(`📞 اتصال بالرقم (${dial}): جاري طلب الخط... لا يوجد رد.`);
+                alert("الرقم الذي طلبته غير متصل حالياً أو خطأ في الرمز.");
+            }
+            player.currentDial = "";
+            document.getElementById("phoneScreen").innerText = "أدخل الرقم...";
+        }
+
+        // لوحة الأدمن
+        window.openAdminPanel = function() { document.getElementById("adminModal").classList.remove("hidden"); }
+        window.closeAdminPanel = function() { document.getElementById("adminModal").classList.add("hidden"); }
+
+        window.grantAdminMoney = function() {
+            const pass = document.getElementById("adminPassInput").value;
+            if (pass === "13121312") {
+                player.money += 50000;
+                updateUI();
+                logEvent("💵 [أدمن]: تم إضافة 50,000$ إلى رصيدك بنجاح.");
+                closeAdminPanel();
+            } else {
+                alert("رمز الأدمن غير صحيح!");
+            }
+        }
+
+        function logEvent(text) {
+            eventLog.innerText = text;
+        }
+
+        updateUI();
+    </script>
+</body>
+</html>
