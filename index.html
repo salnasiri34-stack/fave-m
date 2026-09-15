@@ -3,243 +3,132 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ER:LC Web Simulator - Emergency Response Style</title>
+    <title>ER:LC 3D View Simulator - سلومي</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');
-        body { font-family: 'Cairo', sans-serif; background-color: #0b0f19; color: #f8fafc; overflow: hidden; margin: 0; user-select: none; }
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap');
+        body { font-family: 'Cairo', sans-serif; background: #020617; color: white; margin: 0; overflow: hidden; user-select: none; }
+        .roblox-glass { background: rgba(15, 23, 42, 0.88); backdrop-filter: blur(14px); border: 1px solid rgba(255, 255, 255, 0.12); box-shadow: 0 20px 40px rgba(0,0,0,0.7); }
         
-        /* تأثيرات واجهة روبلوكس الزجاجية الداكنة */
-        .roblox-glass { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
-        .roblox-topbar { background: rgba(20, 24, 33, 0.92); border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
-        
-        /* تأثير حركة اللاعب والشارع */
-        .game-road-bg {
-            background-image: 
-                linear-gradient(to right, rgba(255,255,255,0.04) 1px, transparent 1px),
-                linear-gradient(to bottom, rgba(255,255,255,0.04) 1px, transparent 1px);
-            background-size: 80px 80px;
+        /* تأثير عمق الأبعاد الثلاثية للشارع والخلفية */
+        .perspective-container {
+            perspective: 1200px;
+            transform-style: preserve-3d;
         }
-
-        @keyframes pulseGlow { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.03); } }
-        .interactive-pulse { animation: pulseGlow 3s infinite ease-in-out; }
+        .world-plane {
+            transform: rotateX(35deg) scale(1.1);
+            transform-origin: bottom center;
+            background-image: 
+                linear-gradient(to right, rgba(255,255,255,0.08) 2px, transparent 2px),
+                linear-gradient(to bottom, rgba(255,255,255,0.08) 2px, transparent 2px);
+            background-size: 100px 100px;
+        }
     </style>
 </head>
-<body class="h-screen w-screen flex flex-col justify-between relative">
+<body class="h-screen w-screen flex flex-col justify-between">
 
-    <!-- 1. شريط روبلوكس العلوي المطابق للصورة تماماً -->
-    <header class="roblox-topbar px-4 py-2.5 flex justify-between items-center z-50 shadow-2xl">
-        <!-- مجموعة أيقونات القائمة اليسرى العليا (في الرؤية العربية) أو اليمنى -->
-        <div class="flex items-center space-x-2 space-x-reverse">
-            <button onclick="openRobloxMenu()" class="bg-slate-800/80 hover:bg-slate-700 p-2 rounded-xl border border-slate-700 text-sm shadow transition flex items-center justify-center w-10 h-10 font-bold">⚙️</button>
-            <button onclick="openStatsModal()" class="bg-slate-800/80 hover:bg-slate-700 p-2 rounded-xl border border-slate-700 text-sm shadow transition flex items-center justify-center w-10 h-10">📊</button>
-            <button onclick="openShopModal()" class="bg-slate-800/80 hover:bg-slate-700 p-2 rounded-xl border border-slate-700 text-sm shadow transition flex items-center justify-center w-10 h-10">🛒</button>
-            <button onclick="alert('قائمة الإعدادات العامة لـ ER:LC')" class="bg-slate-800/80 hover:bg-slate-700 p-2 rounded-xl border border-slate-700 text-sm shadow transition flex items-center justify-center w-10 h-10">❓</button>
+    <!-- الشريط العلوي المطابق للعبة الأصلية -->
+    <header class="roblox-glass px-5 py-3 flex justify-between items-center z-50 border-b border-slate-800">
+        <div class="flex items-center gap-3">
+            <button onclick="alert('إعدادات اللعبة')" class="bg-slate-800 hover:bg-slate-700 w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm border border-slate-700">⚙️</button>
+            <button onclick="alert('متجر الأكواد')" class="bg-slate-800 hover:bg-slate-700 w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm border border-slate-700">🛒</button>
+            <span class="text-xs font-bold text-amber-400 bg-amber-500/10 px-3 py-1.5 rounded-xl border border-amber-500/20">Liberty County 3D Mode</span>
         </div>
-
-        <!-- معلومات المال والوقت في منتصف الشريط العلوي -->
-        <div class="flex items-center space-x-3 space-x-reverse">
-            <div class="roblox-glass px-4 py-1.5 rounded-2xl flex items-center gap-2 border border-slate-700/80 shadow-inner">
-                <span class="text-emerald-400 font-black text-sm">💵</span>
-                <span id="playerMoney" class="text-emerald-400 font-black text-base">4,368</span>
+        <div class="flex items-center gap-4">
+            <div class="roblox-glass px-4 py-1.5 rounded-2xl flex items-center gap-2 border border-slate-700">
+                <span class="text-emerald-400 font-bold">💵</span>
+                <span id="cashDisplay" class="text-emerald-400 font-black text-base">4,368 $</span>
             </div>
-            <div class="roblox-glass px-4 py-1.5 rounded-2xl flex items-center gap-2 border border-slate-700/80 shadow-inner text-xs font-bold text-slate-300">
+            <div class="roblox-glass px-4 py-1.5 rounded-2xl flex items-center gap-2 border border-slate-700 text-xs font-bold text-slate-300">
                 <span>🕒</span>
-                <span id="gameTime">10:48 صباحًا</span>
+                <span>10:48 صباحًا</span>
             </div>
         </div>
     </header>
 
-    <!-- 2. مساحة اللعب الرئيسية (محاكاة الشوارع والبيئة ثلاثية الأبعاد) -->
-    <div class="flex-1 relative bg-slate-950 overflow-hidden game-road-bg flex items-center justify-center" id="gameViewport">
+    <!-- منطقة اللعب بمنظور الأبعاد (3D Perspective View) -->
+    <div class="flex-1 relative overflow-hidden bg-slate-950 perspective-container flex items-center justify-center">
         
-        <!-- عناصر البيئة الخلفية (محاكاة خريطة Liberty County) -->
-        <div class="absolute inset-0 p-8 pointer-events-none flex flex-col justify-between opacity-40">
-            <div class="flex justify-between text-xs font-bold text-slate-400">
-                <span class="roblox-glass px-3 py-1.5 rounded-xl border border-slate-800">🌲 [منطقة الغابات والشوارع الفرعية]</span>
-                <span class="roblox-glass px-3 py-1.5 rounded-xl border border-slate-800">⛽ [محطة الوقود المركزية]</span>
-            </div>
-            <div class="flex justify-between text-xs font-bold text-slate-400">
-                <span class="roblox-glass px-3 py-1.5 rounded-xl border border-slate-800">🏦 [بنك المدينة الرئيسي]</span>
-                <span class="roblox-glass px-3 py-1.5 rounded-xl border border-slate-800">🚨 [مركِز شرطة المقاطعة]</span>
+        <!-- أرضية الشارع والمدينة المجسمة -->
+        <div class="absolute inset-0 world-plane bg-slate-900 border-4 border-slate-800 flex items-center justify-center">
+            <!-- خطوط الشارع الوسطية -->
+            <div class="absolute w-full h-32 bg-slate-950 border-y-4 border-slate-700 flex items-center justify-around">
+                <div class="w-24 h-2 bg-amber-400"></div>
+                <div class="w-24 h-2 bg-amber-400"></div>
+                <div class="w-24 h-2 bg-amber-400"></div>
             </div>
         </div>
 
-        <!-- الشارع الإسفلتي العرضي والطولي في الخريطة -->
-        <div class="absolute w-full h-44 bg-slate-900/95 border-y-4 border-slate-700/60 flex items-center justify-between px-16 shadow-2xl">
-            <div class="absolute w-full border-t-2 border-dashed border-amber-400/50 top-1/2"></div>
-            <span class="text-[11px] font-mono text-slate-500 uppercase tracking-widest bg-slate-950 px-3 py-1 rounded border border-slate-800">Liberty County Main Highway</span>
-        </div>
-        <div class="absolute h-full w-44 bg-slate-900/95 border-x-4 border-slate-700/60 flex flex-col items-center justify-between py-16 shadow-2xl">
-            <div class="absolute h-full border-r-2 border-dashed border-amber-400/50 left-1/2"></div>
-        </div>
-
-        <!-- صندوق المهام اليومية (Daily Goals) في الجانب الأيسر العلوي تماماً مثل الصورة -->
-        <div class="absolute top-4 left-4 roblox-glass p-4 rounded-2xl w-80 shadow-2xl border border-slate-700/80 z-30">
-            <h3 class="text-xs font-bold text-amber-400 mb-3 border-b border-slate-800 pb-2 flex justify-between items-center">
-                <span>الأهداف اليومية (Daily Goals)</span>
-                <span class="text-[10px] text-slate-400">ER:LC RP</span>
-            </h3>
-            <div class="space-y-2.5 text-xs">
-                <div class="flex items-center justify-between text-slate-300">
-                    <div class="flex items-center gap-2">
-                        <input type="checkbox" id="goal1" onchange="checkGoal(1)" class="w-4 h-4 rounded accent-emerald-500 cursor-pointer">
-                        <span id="textGoal1">Cuff a Criminal (0/1)</span>
-                    </div>
-                    <span class="text-emerald-400 font-bold">+500$</span>
-                </div>
-                <div class="flex items-center justify-between text-slate-300">
-                    <div class="flex items-center gap-2">
-                        <input type="checkbox" id="goal2" checked disabled class="w-4 h-4 rounded accent-emerald-500">
-                        <span class="line-through text-slate-500">Drive 5 Miles (5/5 mi)</span>
-                    </div>
-                    <span class="text-slate-500 font-bold">منجز</span>
-                </div>
-                <div class="flex items-center justify-between text-slate-300">
-                    <div class="flex items-center gap-2">
-                        <input type="checkbox" id="goal3" onchange="checkGoal(3)" class="w-4 h-4 rounded accent-emerald-500 cursor-pointer">
-                        <span id="textGoal3">Vote on a Feedback Suggestion (0/1)</span>
-                    </div>
-                    <span class="text-emerald-400 font-bold">+300$</span>
-                </div>
+        <!-- أهداف يومية على اليسار مثل الصورة -->
+        <div class="absolute top-4 left-4 roblox-glass p-4 rounded-2xl w-72 z-40 border border-slate-700">
+            <h4 class="text-xs font-bold text-amber-400 mb-2 border-b border-slate-800 pb-1.5">الأهداف اليومية (Daily Goals)</h4>
+            <div class="space-y-2 text-xs text-slate-300">
+                <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="accent-emerald-500 w-4 h-4"> Cuff a Criminal (0/1)</label>
+                <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked disabled class="accent-emerald-500 w-4 h-4"><span class="line-through text-slate-500">Drive 5 Miles (5/5)</span></label>
             </div>
         </div>
 
-        <!-- الأزرار الجانبية اليسرى (شكل الأيقونات العمودية في اللعبة) -->
-        <div class="absolute left-4 top-56 flex flex-col gap-2.5 z-30">
-            <button onclick="toggleModal('phoneModal')" class="roblox-glass hover:bg-slate-800 w-12 h-12 rounded-2xl flex items-center justify-center text-xl shadow-xl border border-slate-700 transition active:scale-95" title="الجوال">📱</button>
-            <button onclick="toggleModal('inventoryModal')" class="roblox-glass hover:bg-slate-800 w-12 h-12 rounded-2xl flex items-center justify-center text-xl shadow-xl border border-slate-700 transition active:scale-95" title="الحقيبة">🎒</button>
-            <button onclick="toggleModal('vehiclesModal')" class="roblox-glass hover:bg-slate-800 w-12 h-12 rounded-2xl flex items-center justify-center text-xl shadow-xl border border-slate-700 transition active:scale-95" title="المركبات">🚗</button>
-            <button onclick="toggleModal('teamsModal')" class="roblox-glass hover:bg-slate-800 w-12 h-12 rounded-2xl flex items-center justify-center text-xl shadow-xl border border-slate-700 transition active:scale-95" title="الفرق والوظائف">🛡️</button>
+        <!-- أزرار الأدوات الجانبية -->
+        <div class="absolute left-4 top-44 flex flex-col gap-2.5 z-40">
+            <button onclick="togglePhone()" class="roblox-glass hover:bg-slate-800 w-12 h-12 rounded-2xl flex items-center justify-center text-xl shadow-xl border border-slate-700 transition active:scale-95" title="الجوال">📱</button>
+            <button onclick="toggleVehicleMode()" id="carSwitchBtn" class="roblox-glass hover:bg-slate-800 w-12 h-12 rounded-2xl flex items-center justify-center text-xl shadow-xl border border-slate-700 transition active:scale-95" title="السيارة">🚗</button>
         </div>
 
-        <!-- شخصية اللاعب في المنتصف (منظور الخلف 3D المحاكي للصورة) -->
-        <div id="playerAvatarContainer" class="absolute transition-all duration-200 flex flex-col items-center z-20" style="top: 50%; left: 50%; transform: translate(-50%, -50%);">
-            <div id="avatarEmoji" class="text-7xl filter drop-shadow-[0_15px_25px_rgba(0,0,0,0.9)] interactive-pulse">🧍‍♂️</div>
-            <div class="roblox-glass text-slate-200 text-[11px] px-3.5 py-1 rounded-full mt-2 border border-slate-700 font-bold shadow-2xl flex items-center gap-2">
+        <!-- شخصية اللاعب المجسمة في المنتصف (منظور خلفي 3D) -->
+        <div id="playerEntity" class="absolute z-30 transition-all duration-100 flex flex-col items-center" style="bottom: 30%; left: 50%; transform: translateX(-50%);">
+            <div id="playerAvatar" class="text-6xl filter drop-shadow-[0_20px_20px_rgba(0,0,0,0.9)] animate-bounce">🧍‍♂️</div>
+            <div class="roblox-glass text-slate-100 text-[11px] px-3.5 py-1 rounded-full mt-1 border border-slate-700 font-bold shadow-2xl flex items-center gap-2">
                 <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span id="playerRoleTag">سلومي (مدني / Civil)</span>
+                <span>سلومي (Roleplay)</span>
             </div>
         </div>
 
-        <!-- زر تفاعل ركوب المركبة أو التفاعل (في منتصف الأسفل مثل اللعبة) -->
-        <div class="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center">
-            <button onclick="interactVehicle()" id="interactBtn" class="roblox-glass hover:bg-slate-800 px-8 py-3.5 rounded-2xl font-black text-amber-400 border border-slate-600 shadow-2xl transition active:scale-95 flex items-center gap-3 text-sm">
-                <span>🚗</span> ركوب السيارة والتحرك
+        <!-- زر تفاعل قيادة السيارة بالأسفل -->
+        <div class="absolute bottom-6 left-1/2 -translate-x-1/2 z-40">
+            <button onclick="toggleVehicleMode()" id="bottomInteractBtn" class="roblox-glass hover:bg-slate-800 px-8 py-3.5 rounded-2xl font-black text-amber-400 border border-slate-600 shadow-2xl transition active:scale-95 text-sm flex items-center gap-2">
+                <span>🚗</span> ركوب السيارة والتحرك بالشارع
             </button>
-        </div>
-
-        <!-- الخريطة المصغرة (Mini-Map) في أسفل اليمين -->
-        <div class="absolute bottom-6 right-6 roblox-glass w-48 h-48 rounded-3xl p-3 z-30 shadow-2xl border border-slate-700 flex flex-col justify-between overflow-hidden">
-            <div class="flex justify-between items-center text-[10px] font-bold text-slate-400">
-                <span>Liberty County Map</span>
-                <span class="text-emerald-400 animate-ping">GPS</span>
-            </div>
-            <div class="flex-1 relative my-2 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-center overflow-hidden">
-                <div class="absolute inset-0 game-road-bg opacity-50"></div>
-                <div id="miniDot" class="w-3.5 h-3.5 bg-amber-400 rounded-full shadow-[0_0_12px_#fbbf24] absolute transition-all duration-200"></div>
-            </div>
-            <div class="text-[9px] text-center text-slate-500 font-mono">الإحداثيات الحية: 34.12° N</div>
-        </div>
-    </div>
-
-    <!-- نافذة إضافية: الجوال -->
-    <div id="phoneModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden z-50 flex items-center justify-center">
-        <div class="roblox-glass max-xs w-72 p-5 rounded-3xl border border-slate-700 shadow-2xl flex flex-col items-center">
-            <div class="w-full flex justify-between items-center mb-3"><span class="text-xs font-bold text-slate-400">جوال الطوارئ 📱</span><button onclick="toggleModal('phoneModal')" class="text-white hover:text-red-400">✕</button></div>
-            <div class="bg-slate-950 w-full p-3 rounded-xl text-center text-emerald-400 font-mono text-xl mb-3 border border-slate-800" id="phoneDisplay">911</div>
-            <div class="grid grid-cols-3 gap-2 w-full text-sm font-bold mb-3">
-                <button onclick="appendPhone('1')" class="bg-slate-900 p-3 rounded-xl border border-slate-800 hover:bg-slate-800">1</button>
-                <button onclick="appendPhone('2')" class="bg-slate-900 p-3 rounded-xl border border-slate-800 hover:bg-slate-800">2</button>
-                <button onclick="appendPhone('3')" class="bg-slate-900 p-3 rounded-xl border border-slate-800 hover:bg-slate-800">3</button>
-                <button onclick="appendPhone('9')" class="bg-slate-900 p-3 rounded-xl border border-slate-800 hover:bg-slate-800">9</button>
-                <button onclick="callPolice()" class="col-span-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl p-3 text-xs shadow">اتصال طوارئ</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- نافذة اختيار الفرق والوظائف (Teams) -->
-    <div id="teamsModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden z-50 flex items-center justify-center">
-        <div class="roblox-glass max-w-sm w-full p-6 rounded-3xl border border-slate-700 shadow-2xl">
-            <div class="flex justify-between items-center mb-4"><h3 class="font-bold text-sm text-amber-400">اختر وظيفتك في المقاطعة (Teams)</h3><button onclick="toggleModal('teamsModal')" class="text-white hover:text-red-400">✕</button></div>
-            <div class="space-y-2.5 text-xs font-bold">
-                <button onclick="setTeam('مدني (Civilian)', '🧍‍♂️', 'مدني')" class="w-full bg-slate-900 hover:bg-slate-800 p-3 rounded-xl border border-slate-800 text-right flex justify-between items-center"><span>مواطن مدني</span><span>🧍‍♂️</span></button>
-                <button onclick="setTeam('شرطة المقاطعة (Police)', '👮‍♂️', 'شرطي أمن')" class="w-full bg-slate-900 hover:bg-slate-800 p-3 rounded-xl border border-slate-800 text-right flex justify-between items-center"><span>شرطي (Police)</span><span>👮‍♂️</span></button>
-                <button onclick="setTeam('الإطفاء والإنقاذ (Fire)', '🚒', 'رجل إطفاء')" class="w-full bg-slate-900 hover:bg-slate-800 p-3 rounded-xl border border-slate-800 text-right flex justify-between items-center"><span>إطفائي (Fire Dept)</span><span>🚒</span></button>
-                <button onclick="setTeam('النقل والمواصلات (DOT)', '🚚', 'موظف مواصلات')" class="w-full bg-slate-900 hover:bg-slate-800 p-3 rounded-xl border border-slate-800 text-right flex justify-between items-center"><span>مواصلات (DOT)</span><span>🚚</span></button>
-            </div>
         </div>
     </div>
 
     <script>
-        let gameData = {
-            money: 4368,
-            posX: 50,
-            posY: 50,
-            inVehicle: false,
-            role: "مدني"
-        };
+        let posX = window.innerWidth / 2;
+        let posY = window.innerHeight * 0.6;
+        let isDriving = false;
+        const playerEntity = document.getElementById("playerEntity");
+        const playerAvatar = document.getElementById("playerAvatar");
+        const carSwitchBtn = document.getElementById("carSwitchBtn");
+        const bottomInteractBtn = document.getElementById("bottomInteractBtn");
 
-        const playerAvatarContainer = document.getElementById("playerAvatarContainer");
-        const avatarEmoji = document.getElementById("avatarEmoji");
-        const miniDot = document.getElementById("miniDot");
-        const playerMoney = document.getElementById("playerMoney");
-        const interactBtn = document.getElementById("interactBtn");
-        const playerRoleTag = document.getElementById("playerRoleTag");
-
-        function updateUI() {
-            playerMoney.innerText = gameData.money.toLocaleString();
-            playerAvatarContainer.style.top = gameData.posY + "%";
-            playerAvatarContainer.style.left = gameData.posX + "%";
-            miniDot.style.top = gameData.posY + "%";
-            miniDot.style.left = gameData.posX + "%";
-        }
-
-        // حركة اللاعب بالأسهم أو الأزرار
         window.addEventListener('keydown', (e) => {
-            const step = 4;
-            if(e.key === 'ArrowUp' && gameData.posY > 10) gameData.posY -= step;
-            if(e.key === 'ArrowDown' && gameData.posY < 90) gameData.posY += step;
-            if(e.key === 'ArrowLeft' && gameData.posX > 10) gameData.posX -= step;
-            if(e.key === 'ArrowRight' && gameData.posX < 90) gameData.posX += step;
-            updateUI();
+            const speed = 15;
+            if (e.key === 'ArrowLeft' || e.key === 'a') posX = Math.max(100, posX - speed);
+            if (e.key === 'ArrowRight' || e.key === 'd') posX = Math.min(window.innerWidth - 100, posX + speed);
+            if (e.key === 'ArrowUp' || e.key === 'w') posY = Math.max(200, posY - speed);
+            if (e.key === 'ArrowDown' || e.key === 's') posY = Math.min(window.innerHeight - 150, posY + speed);
+
+            playerEntity.style.left = posX + 'px';
+            playerEntity.style.top = posY + 'px';
         });
 
-        window.interactVehicle = function() {
-            gameData.inVehicle = !gameData.inVehicle;
-            if(gameData.inVehicle) {
-                avatarEmoji.innerText = "🚙";
-                interactBtn.innerHTML = "<span>🚶‍♂️</span> الترجل من المركبة";
-                interactBtn.className = "roblox-glass hover:bg-red-950 px-8 py-3.5 rounded-2xl font-black text-red-400 border border-red-600/50 shadow-2xl transition active:scale-95 flex items-center gap-3 text-sm";
+        function toggleVehicleMode() {
+            isDriving = !isDriving;
+            if (isDriving) {
+                playerAvatar.innerText = "🚙";
+                carSwitchBtn.innerText = "🚶‍♂️";
+                bottomInteractBtn.innerHTML = "<span>🚶‍♂️</span> الترجل من السيارة";
+                bottomInteractBtn.className = "roblox-glass hover:bg-red-950 px-8 py-3.5 rounded-2xl font-black text-red-400 border border-red-600/50 shadow-2xl transition active:scale-95 text-sm flex items-center gap-2";
             } else {
-                avatarEmoji.innerText = "🧍‍♂️";
-                interactBtn.innerHTML = "<span>🚗</span> ركوب السيارة والتحرك";
-                interactBtn.className = "roblox-glass hover:bg-slate-800 px-8 py-3.5 rounded-2xl font-black text-amber-400 border border-slate-600 shadow-2xl transition active:scale-95 flex items-center gap-3 text-sm";
+                playerAvatar.innerText = "🧍‍♂️";
+                carSwitchBtn.innerText = "🚗";
+                bottomInteractBtn.innerHTML = "<span>🚗</span> ركوب السيارة والتحرك بالشارع";
+                bottomInteractBtn.className = "roblox-glass hover:bg-slate-800 px-8 py-3.5 rounded-2xl font-black text-amber-400 border border-slate-600 shadow-2xl transition active:scale-95 text-sm flex items-center gap-2";
             }
         }
 
-        window.toggleModal = function(id) {
-            const modal = document.getElementById(id);
-            modal.classList.toggle("hidden");
+        function togglePhone() {
+            alert("تم فتح جوال الطوارئ بنجاح!");
         }
-
-        window.checkGoal = function(num) {
-            const checkbox = document.getElementById("goal" + num);
-            if(checkbox.checked) {
-                gameData.money += num === 1 ? 500 : 300;
-                updateUI();
-                alert("تم إنجاز المهمة بنجاح وإضافة المكافأة لرصيدك!");
-            }
-        }
-
-        window.setTeam = function(name, emoji, roleName) {
-            avatarEmoji.innerText = emoji;
-            playerRoleTag.innerText = `سلومي (${roleName})`;
-            toggleModal('teamsModal');
-            alert(`تم الانضمام لفريق: ${name}`);
-        }
-
-        updateUI();
     </script>
 </body>
 </html>
